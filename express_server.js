@@ -9,6 +9,22 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const generateRandomString = () => {
+
+  const charString = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let randomString = '';
+  
+  // Max of 6 random chars
+  for (let i = 1; i <= 6; i++) {
+    let randomChar = charString.charAt(Math.floor(Math.random() * charString.length));
+    randomString += randomChar;
+  }
+  
+  return randomString;
+}
+
+app.use(express.urlencoded({ extended: true }));
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -24,6 +40,15 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
+});
+
+app.post("/urls", (req, res) => {
+  console.log(req.body); // Log the POST request body to the console
+  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+});
+
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
 });
 
 app.get("/urls/:id", (req, res) => {
