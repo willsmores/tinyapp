@@ -22,9 +22,16 @@
           <%= id %>
         </a>
       </p>
-      <a href="#">Shorten a new URL</a>
+      <!-- <a href="#">Shorten a new URL</a> -->
     </div>
-    <div class="card-footer text-muted"></div>
+    <div class="card-footer text-muted">
+      <h5>Edit URL</h5>
+      <form method="POST" action='/urls/<%= id %>/edit'>
+        <label for="edit">New URL:</label>
+        <input type="text" id="edit" name="editedURL">
+        <button type="submit">Submit</button>
+      </form>
+    </div>
   </div>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
