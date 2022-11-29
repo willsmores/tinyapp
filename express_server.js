@@ -1,3 +1,4 @@
+const { application } = require("express");
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
@@ -43,8 +44,6 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  // console.log(req.body); // Log the POST request body to the console
-  // res.send("Ok"); // Respond with 'Ok' (we will replace this)
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   // console.log(urlDatabase);
@@ -58,10 +57,6 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   // console.log(req.params);
   // console.log(urlDatabase);
-  
-  // if (!req.params.id) {
-  //   res.redirect(`/urls/new`);
-  // }
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render('urls_show', templateVars);
 });
@@ -70,6 +65,12 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   // console.log(longURL);
   res.redirect(longURL);
+});
+
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  delete urlDatabase[id];
+  res.redirect('/urls');
 });
 
 app.listen(PORT, () => {

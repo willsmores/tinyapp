@@ -8,6 +8,21 @@
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
     integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous" />
+  <style>
+    .button_delete {
+      background: white;
+      border: 2px solid red;
+      border-radius: 5px;
+      padding: 5px 10px;
+      color: red;
+      transition: .2s ease-in-out;
+    }
+
+    .button_delete:hover {
+      background: red;
+      color: white;
+    }
+  </style>
   <title>TinyApp</title>
 </head>
 
@@ -22,6 +37,7 @@
         <tr>
           <th scope="col">Short URL ID</th>
           <th scope="col">Long URL</th>
+          <th scope="col">Delete</th>
         </tr>
       </thead>
       <tbody>
@@ -32,6 +48,11 @@
             </td>
             <td>
               <%= urls[id] %>
+            </td>
+            <td>
+              <form method="POST" action='/urls/<%= id %>/delete'>
+                <button type="submit" class="button_delete">Delete</button>
+              </form>
             </td>
           </tr>
           <% }; %>
