@@ -100,6 +100,15 @@ app.get("/register", (req, res) => {
   res.render("urls_register", templateVars);
 });
 
+app.get("/login", (req, res) => {
+  const specificUser = req.cookies["user_id"]; // grabs current user from cookie
+  const templateVars = { 
+    // username: req.cookies["username"],
+    user: users[specificUser]
+  };
+  res.render("urls_login", templateVars);
+});
+
 app.get("/urls/:id", (req, res) => {
   // console.log(req.params);
   // console.log(urlDatabase);
