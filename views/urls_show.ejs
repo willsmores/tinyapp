@@ -5,6 +5,7 @@
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
     integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous" />
+
   <title>URL - TinyApp Example</title>
 </head>
 
@@ -28,8 +29,8 @@
       <h5>Edit URL</h5>
       <form method="POST" action='/urls/<%= id %>/edit'>
         <label for="edit">New URL:</label>
-        <input type="text" id="edit" name="editedURL">
-        <button type="submit">Submit</button>
+        <input type="text" id="edit" name="editedURL" placeholder="http://">
+        <button type="submit" class="btn btn-warning btn-sm">Submit</button>
       </form>
     </div>
   </div>
