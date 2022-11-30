@@ -9,6 +9,12 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
     integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous" />
 
+  <style>
+    .btn {
+      min-width: 80px;
+    }
+  </style>
+
   <title>TinyApp</title>
 </head>
 
@@ -37,18 +43,18 @@
               <%= urls[id] %>
             </td>
             <td>
-              <a href='/urls/<%= id %>' class="btn btn-primary btn-sm">Edit</a>
+              <a href='/urls/<%= id %>' class="btn btn-primary">Edit</a>
             </td>
             <td>
               <form method="POST" action='/urls/<%= id %>/delete'>
-                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                <button type="submit" class="btn btn-danger">Delete</button>
               </form>
             </td>
           </tr>
           <% }; %>
       </tbody>
     </table>
-    <a href="#">Link for shortening a URL</a>
+    <!-- <a href="#">Link for shortening a URL</a> -->
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

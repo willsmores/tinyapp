@@ -5,6 +5,11 @@ const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+
+//*** Values ***//
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -24,6 +29,9 @@ const users = {
   },
 };
 
+
+//*** Functions ***//
+
 // Random 6 char string generator for ids
 const generateRandomString = () => {
 
@@ -37,55 +45,38 @@ const generateRandomString = () => {
   }
   
   return randomString;
-}
+};
 
 // Helper function for looking up users by email address
 const getUserByEmail = (email) => {
   for (let user in users) {
     if (users[user].email === email) {
-      return user;
+      return users[user];
     }
   }
   return null;
-}
+};
 
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+
+//*** GET requests ***//
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  res.send("TinyApp Server is up!");
 });
 
 app.get("/urls", (req, res) => {
   const specificUser = req.cookies["user_id"]; // grabs current user from cookie
-  const templateVars = { 
+  const templateVars = {
     urls: urlDatabase,
-    // username: req.cookies["username"],
     user: users[specificUser]
   };
   res.render('urls_index', templateVars);
   console.log(templateVars);
 });
 
-app.post("/urls", (req, res) => {
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  // console.log(urlDatabase);
-  res.redirect(`/urls/${shortURL}`);
-});
-
 app.get("/urls/new", (req, res) => {
   const specificUser = req.cookies["user_id"]; // grabs current user from cookie
-  const templateVars = { 
-    // username: req.cookies["username"],
+  const templateVars = {
     user: users[specificUser]
   };
   res.render("urls_new", templateVars);
@@ -93,8 +84,7 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/register", (req, res) => {
   const specificUser = req.cookies["user_id"]; // grabs current user from cookie
-  const templateVars = { 
-    // username: req.cookies["username"],
+  const templateVars = {
     user: users[specificUser]
   };
   res.render("urls_register", templateVars);
@@ -102,21 +92,17 @@ app.get("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   const specificUser = req.cookies["user_id"]; // grabs current user from cookie
-  const templateVars = { 
-    // username: req.cookies["username"],
+  const templateVars = {
     user: users[specificUser]
   };
   res.render("urls_login", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
-  // console.log(req.params);
-  // console.log(urlDatabase);
   const specificUser = req.cookies["user_id"]; // grabs current user from cookie
-  const templateVars = { 
-    id: req.params.id, 
+  const templateVars = {
+    id: req.params.id,
     longURL: urlDatabase[req.params.id],
-    // username: req.cookies["username"],
     user: users[specificUser]
   };
   res.render('urls_show', templateVars);
@@ -124,8 +110,17 @@ app.get("/urls/:id", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  // console.log(longURL);
   res.redirect(longURL);
+});
+
+
+//*** POST requests ***//
+
+// Route for creation of short URL
+app.post("/urls", (req, res) => {
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`);
 });
 
 // Route for deleting a URL
@@ -145,44 +140,50 @@ app.post("/urls/:id/edit", (req, res) => {
 
 // Route for logins
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  // console.log(username);
+  const email = req.body.email;
+  const password = req.body.password;
+  const userToLogin = getUserByEmail(email);
+
+  if (!userToLogin)
+    return res.status(403).send('Email not found.');
+  
+  if (userToLogin.email && userToLogin.password !== password)
+    return res.status(403).send('Password does not match.');
+    
+  res.cookie('user_id', userToLogin.id);
   res.redirect('/urls');
 });
 
 // Route for logouts
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
-  res.redirect('/urls');
+  res.clearCookie('user_id');
+  res.redirect('/login');
 });
 
-// Route for register
+// Route for registering new account
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  if (!email) {
-    return res.status(400).send('Please enter a valid email.')
-  };
+  if (!email)
+    return res.status(400).send('Please enter a valid email.');
 
-  if (!password) {
-    return res.status(400).send('Please enter a valid password.')
-  };
+  if (!password)
+    return res.status(400).send('Please enter a valid password.');
 
   if (getUserByEmail(email))
-      return res.status(400).send('Email already in use.');
+    return res.status(400).send('Email already in use.');
 
   let userID = generateRandomString();
-  users[userID] = { 
-      id: userID,
-      email: email,
-      password: password
+  users[userID] = {
+    id: userID,
+    email: email,
+    password: password
   };
   res.cookie('user_id', userID);
   res.redirect('/urls');
-  console.log(users);
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp server is up and listening on port ${PORT}!`);
 });

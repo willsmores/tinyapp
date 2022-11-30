@@ -27,10 +27,12 @@
     </div>
     <div class="card-footer text-muted">
       <h5>Edit URL</h5>
-      <form method="POST" action='/urls/<%= id %>/edit'>
-        <label for="edit">New URL:</label>
-        <input type="text" id="edit" name="editedURL" placeholder="http://">
-        <button type="submit" class="btn btn-warning btn-sm">Submit</button>
+      <form class="form-horizontal" action='/urls/<%= id %>/edit' method="POST">
+        <div class="form-group mb-2">
+          <label for="edit">New URL:</label>
+          <input type="text" id="edit" name="editedURL" placeholder="http://">
+          <button type="submit" class="btn btn-warning btn-sm" style="margin-bottom: 5px">Submit</button>
+        </div>
       </form>
     </div>
   </div>
