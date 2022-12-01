@@ -12,8 +12,14 @@ app.use(cookieParser());
 //*** Values ***//
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "userRandomID"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "user2RandomID"
+  }
 };
 
 const users = {
@@ -70,7 +76,19 @@ app.get("/urls", (req, res) => {
     urls: urlDatabase,
     user: users[specificUser]
   };
-  res.render('urls_index', templateVars);
+  if (!specificUser) {
+    res.send(`
+    <html>
+      <body>
+        <h1>You must be logged in to edit URLs!</h1>
+        <h2><a href="/login">Login here</a></h2>
+        <h2><a href="/register">Register here</a></h2>
+      </body>
+    </html>
+    \n`);
+  } else {
+    res.render('urls_index', templateVars);
+  }
 });
 
 app.get("/urls/new", (req, res) => {
@@ -111,9 +129,10 @@ app.get("/login", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const specificUser = req.cookies["user_id"]; // grabs current user from cookie
+  const id = req.params.id;
   const templateVars = {
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    id: id,
+    longURL: urlDatabase[id].longURL,
     user: users[specificUser]
   };
 
@@ -125,8 +144,9 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  if (!urlDatabase[req.params.id]) {
+  const id = req.params.id;
+  const longURL = urlDatabase[id].longURL;
+  if (!urlDatabase[id]) {
     res.send("<html><body><h1>That short URL does not exist.</h1></body></html>\n");
   } else {
     res.redirect(longURL);
@@ -160,7 +180,7 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/urls/:id/edit", (req, res) => {
   const id = req.params.id;
   const longURL = req.body.editedURL;
-  urlDatabase[id] = longURL;
+  urlDatabase[id].longURL = longURL;
   res.redirect('/urls');
 });
 
