@@ -19,6 +19,14 @@ const urlDatabase = {
   "9sm5xK": {
     longURL: "http://www.google.com",
     userID: "user2RandomID"
+  },
+  "abcde9": {
+    longURL: "http://www.google.ca",
+    userID: "user2RandomID"
+  },
+  "ie8i3n": {
+    longURL: "https://www.bbc.com/sport/football",
+    userID: "user2RandomID"
   }
 };
 
@@ -63,6 +71,18 @@ const getUserByEmail = (email) => {
   return null;
 };
 
+// Returns URLs that match user ID
+const urlsForUser = (id) => {
+  const userURLs = {};
+
+  for (let urls in urlDatabase) {
+    if (urlDatabase[urls].userID === id) {
+      userURLs[urls] = urlDatabase[urls].longURL;
+    }
+  }
+  return userURLs;
+};
+
 
 //*** GET requests ***//
 
@@ -72,10 +92,7 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const specificUser = req.cookies["user_id"]; // grabs current user from cookie
-  const templateVars = {
-    urls: urlDatabase,
-    user: users[specificUser]
-  };
+
   if (!specificUser) {
     res.send(`
     <html>
@@ -87,6 +104,15 @@ app.get("/urls", (req, res) => {
     </html>
     \n`);
   } else {
+
+    const userURLs = urlsForUser(specificUser);
+
+    const templateVars = {
+      urls: userURLs,
+      user: users[specificUser]
+    };
+    console.log('templateVars:', templateVars);
+
     res.render('urls_index', templateVars);
   }
 });
@@ -132,7 +158,7 @@ app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const templateVars = {
     id: id,
-    longURL: urlDatabase[id].longURL,
+    longURL: urlDatabase[id], // Changed
     user: users[specificUser]
   };
 
@@ -160,7 +186,7 @@ app.get("/u/:id", (req, res) => {
 app.post("/urls", (req, res) => {
   const specificUser = req.cookies["user_id"]; // grabs current user from cookie
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL].longURL = req.body.longURL;
 
   if (!specificUser) {
     res.send("<html><body><h1>You must be logged in to edit URLs!</h1></body></html>\n");
@@ -171,9 +197,26 @@ app.post("/urls", (req, res) => {
 
 // Route for deleting a URL
 app.post("/urls/:id/delete", (req, res) => {
+  const specificUser = req.cookies["user_id"]; // grabs current user from cookie
   const id = req.params.id;
-  delete urlDatabase[id];
-  res.redirect('/urls');
+
+  const userURLs = urlsForUser(specificUser);
+
+  console.log('id:', id);
+  // console.log('urlDBID:', urlDatabase[id]);
+  console.log('userurls:', userURLs);
+
+  if (!specificUser)
+    return res.status(403).send('You do not have permission to delete this URL.');
+
+  const shortURLs = Object.keys(userURLs);
+
+  if (shortURLs.find(url => url === id)) {
+    delete urlDatabase[id];
+    res.redirect('/urls');
+  } else {
+    return res.status(403).send('You do not have permission to delete this URL.');
+  }
 });
 
 // Route for editing a URL
