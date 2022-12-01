@@ -1,13 +1,18 @@
 const { application } = require("express");
 const express = require("express");
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+// app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}));
 
 
 //*** Values ***//
@@ -92,7 +97,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const specificUser = req.cookies["user_id"]; // grabs current user from cookie
+  const specificUser = req.session.user_id; // grabs current user from cookie
 
   if (!specificUser) {
     res.send(`
@@ -112,14 +117,14 @@ app.get("/urls", (req, res) => {
       urls: userURLs,
       user: users[specificUser]
     };
-    console.log('templateVars:', templateVars);
+    // console.log('templateVars:', templateVars);
 
     res.render('urls_index', templateVars);
   }
 });
 
 app.get("/urls/new", (req, res) => {
-  const specificUser = req.cookies["user_id"]; // grabs current user from cookie
+  const specificUser = req.session.user_id; // grabs current user from cookie
   const templateVars = {
     user: users[specificUser]
   };
@@ -131,7 +136,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const specificUser = req.cookies["user_id"]; // grabs current user from cookie
+  const specificUser = req.session.user_id; // grabs current user from cookie
   const templateVars = {
     user: users[specificUser]
   };
@@ -143,7 +148,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const specificUser = req.cookies["user_id"]; // grabs current user from cookie
+  const specificUser = req.session.user_id; // grabs current user from cookie
   const templateVars = {
     user: users[specificUser]
   };
@@ -155,16 +160,24 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const specificUser = req.cookies["user_id"]; // grabs current user from cookie
+  const specificUser = req.session.user_id; // grabs current user from cookie
   const id = req.params.id;
   const templateVars = {
     id: id,
-    longURL: urlDatabase[id], // Changed
+    longURL: urlDatabase[id].longURL,
     user: users[specificUser]
   };
 
   if (!specificUser) {
-    res.send("<html><body><h1>You must be logged in to edit URLs!</h1></body></html>\n");
+    res.send(`
+    <html>
+      <body>
+        <h1>You must be logged in to edit URLs!</h1>
+        <h2><a href="/login">Login here</a></h2>
+        <h2><a href="/register">Register here</a></h2>
+      </body>
+    </html>
+    \n`);
   } else {
     res.render('urls_show', templateVars);
   }
@@ -172,7 +185,7 @@ app.get("/urls/:id", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = urlDatabase[id];
+  const longURL = urlDatabase[id].longURL;
   if (!urlDatabase[id]) {
     res.send("<html><body><h1>That short URL does not exist.</h1></body></html>\n");
   } else {
@@ -185,29 +198,43 @@ app.get("/u/:id", (req, res) => {
 
 // Route for creation of short URL
 app.post("/urls", (req, res) => {
-  const specificUser = req.cookies["user_id"]; // grabs current user from cookie
+  const specificUser = req.session.user_id; // grabs current user from cookie
 
   if (!specificUser) {
-    res.send("<html><body><h1>You must be logged in to edit URLs!</h1></body></html>\n");
+    res.send(`
+    <html>
+      <body>
+        <h1>You must be logged in to edit URLs!</h1>
+        <h2><a href="/login">Login here</a></h2>
+        <h2><a href="/register">Register here</a></h2>
+      </body>
+    </html>
+    \n`);
   } else {
     let shortURL = generateRandomString();
-    urlDatabase[shortURL].longURL = req.body.newURL;
-    urlDatabase[shortURL].userID = specificUser;
-    console.log(urlDatabase);
+    // urlDatabase[shortURL].longURL = req.body.longURL;
+    // urlDatabase[shortURL].userID = specificUser;
+
+    urlDatabase[shortURL] = {
+      longURL: req.body.longURL,
+      userID: specificUser
+    };
+
+    console.log('urlDatabase:', urlDatabase);
     res.redirect(`/urls/${shortURL}`);
   }
 });
 
 // Route for deleting a URL
 app.post("/urls/:id/delete", (req, res) => {
-  const specificUser = req.cookies["user_id"]; // grabs current user from cookie
+  const specificUser = req.session.user_id; // grabs current user from cookie
   const id = req.params.id;
 
   const userURLs = urlsForUser(specificUser);
 
-  console.log('id:', id);
+  // console.log('id:', id);
   // console.log('urlDBID:', urlDatabase[id]);
-  console.log('userurls:', userURLs);
+  // console.log('userurls:', userURLs);
 
   if (!specificUser)
     return res.status(403).send('You do not have permission to delete this URL.');
@@ -239,11 +266,12 @@ app.post("/login", (req, res) => {
   if (!userToLogin)
     return res.status(403).send('Email not found.');
 
-    console.log('hashedPW:', userToLogin.password);
-    console.log('enteredPW:', password);
+    // console.log('hashedPW:', userToLogin.password);
+    // console.log('enteredPW:', password);
   
   if (bcrypt.compareSync(password, userToLogin.password)) {
-    res.cookie('user_id', userToLogin.id);
+    // res.cookie('user_id', userToLogin.id);
+    req.session.user_id = userToLogin.id;
     res.redirect('/urls');
   } else {
     return res.status(403).send('Password does not match.');
@@ -253,7 +281,8 @@ app.post("/login", (req, res) => {
 
 // Route for logouts
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  // res.clearCookie('user_id');
+  req.session.user_id = null;
   res.redirect('/login');
 });
 
@@ -278,7 +307,8 @@ app.post("/register", (req, res) => {
     email: email,
     password: hashedPassword
   };
-  res.cookie('user_id', userID);
+  // res.cookie('user_id', userID);
+  req.session.user_id = userID;
   res.redirect('/urls');
   console.log(users);
 });
