@@ -71,7 +71,6 @@ app.get("/urls", (req, res) => {
     user: users[specificUser]
   };
   res.render('urls_index', templateVars);
-  console.log(templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
@@ -79,7 +78,11 @@ app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: users[specificUser]
   };
-  res.render("urls_new", templateVars);
+  if (!specificUser) {
+    res.redirect('/login');
+  } else {
+    res.render("urls_new", templateVars);
+  }
 });
 
 app.get("/register", (req, res) => {
@@ -87,7 +90,11 @@ app.get("/register", (req, res) => {
   const templateVars = {
     user: users[specificUser]
   };
-  res.render("urls_register", templateVars);
+  if (specificUser) {
+    res.redirect('/urls');
+  } else {
+    res.render("urls_register", templateVars);
+  }
 });
 
 app.get("/login", (req, res) => {
@@ -95,7 +102,11 @@ app.get("/login", (req, res) => {
   const templateVars = {
     user: users[specificUser]
   };
-  res.render("urls_login", templateVars);
+  if (specificUser) {
+    res.redirect('/urls');
+  } else {
+    res.render("urls_login", templateVars);
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -105,12 +116,21 @@ app.get("/urls/:id", (req, res) => {
     longURL: urlDatabase[req.params.id],
     user: users[specificUser]
   };
-  res.render('urls_show', templateVars);
+
+  if (!specificUser) {
+    res.send("<html><body><h1>You must be logged in to edit URLs!</h1></body></html>\n");
+  } else {
+    res.render('urls_show', templateVars);
+  }
 });
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  if (!urlDatabase[req.params.id]) {
+    res.send("<html><body><h1>That short URL does not exist.</h1></body></html>\n");
+  } else {
+    res.redirect(longURL);
+  }
 });
 
 
@@ -118,9 +138,15 @@ app.get("/u/:id", (req, res) => {
 
 // Route for creation of short URL
 app.post("/urls", (req, res) => {
+  const specificUser = req.cookies["user_id"]; // grabs current user from cookie
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${shortURL}`);
+
+  if (!specificUser) {
+    res.send("<html><body><h1>You must be logged in to edit URLs!</h1></body></html>\n");
+  } else {
+    res.redirect(`/urls/${shortURL}`);
+  }
 });
 
 // Route for deleting a URL
