@@ -1,6 +1,7 @@
 const { application } = require("express");
 const express = require("express");
 const cookieParser = require('cookie-parser');
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -171,7 +172,7 @@ app.get("/urls/:id", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = urlDatabase[id].longURL;
+  const longURL = urlDatabase[id];
   if (!urlDatabase[id]) {
     res.send("<html><body><h1>That short URL does not exist.</h1></body></html>\n");
   } else {
@@ -185,12 +186,14 @@ app.get("/u/:id", (req, res) => {
 // Route for creation of short URL
 app.post("/urls", (req, res) => {
   const specificUser = req.cookies["user_id"]; // grabs current user from cookie
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL].longURL = req.body.longURL;
 
   if (!specificUser) {
     res.send("<html><body><h1>You must be logged in to edit URLs!</h1></body></html>\n");
   } else {
+    let shortURL = generateRandomString();
+    urlDatabase[shortURL].longURL = req.body.newURL;
+    urlDatabase[shortURL].userID = specificUser;
+    console.log(urlDatabase);
     res.redirect(`/urls/${shortURL}`);
   }
 });
@@ -235,12 +238,17 @@ app.post("/login", (req, res) => {
 
   if (!userToLogin)
     return res.status(403).send('Email not found.');
+
+    console.log('hashedPW:', userToLogin.password);
+    console.log('enteredPW:', password);
   
-  if (userToLogin.email && userToLogin.password !== password)
+  if (bcrypt.compareSync(password, userToLogin.password)) {
+    res.cookie('user_id', userToLogin.id);
+    res.redirect('/urls');
+  } else {
     return res.status(403).send('Password does not match.');
-    
-  res.cookie('user_id', userToLogin.id);
-  res.redirect('/urls');
+  }
+
 });
 
 // Route for logouts
@@ -253,6 +261,7 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (!email)
     return res.status(400).send('Please enter a valid email.');
@@ -267,10 +276,11 @@ app.post("/register", (req, res) => {
   users[userID] = {
     id: userID,
     email: email,
-    password: password
+    password: hashedPassword
   };
   res.cookie('user_id', userID);
   res.redirect('/urls');
+  console.log(users);
 });
 
 app.listen(PORT, () => {
